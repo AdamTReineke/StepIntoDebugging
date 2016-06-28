@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>A Step Into Debugging</title>
+	<!-- By Adam Reineke, https://github.com/AdamTReineke/StepIntoDebugging, MIT License -->
+	<!-- Disclaimer: This code is not pretty, it exists to teach debuggers features. Open an issue to have me clean up something specific. -->
+	
+	<!--
+		Pre-presentation checklist:
+		 [ ] Zoom in in the dev tools (Ctrl + +)
+		 [ ] Debugger should be set to not break on exceptions
+		 [ ] Async checkbox should be unchecked
+		 [ ] Remove all breakpoints
+		 [ ] Be ok with nobody laughing at the pun in the the title ... or this comment. :-)
+	-->
+<style>
+	html { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+	cite, section { display: none; }
+	section.active { display:block; }
+	.code { font-family: Consolas, Courier New, Courier, monospace; }
+	h1 .code { font-weight: 100; }
+	button { border-radius:0.4em; border:1px solid black; }
+</style>
+
+<script>
+	function didPause(time)
+	{
+		// Note: Step over the return line will show the return value.
+		// Note: Select text and hover over it to evalute the line. 
+		return performance.now() - time > 10;
+	}
+	
+	/** Callback for when the page loads to hook up the key press listener and some initial state */
+	function contentLoaded()
+	{
+		// Note: Event listener breakpoints only stop if there is a listener.
+		sections = document.querySelectorAll("section");
+		showSlide(0);
+		document.addEventListener("keyup", function(event) {
+			if(event.key === "ArrowRight" && slide < sections.length - 1)
+			{
+				slide++;
+				return showSlide(slide);
+			} 
+			if(event.key === "ArrowLeft" && slide > 0)
+			{
+				slide--;
+				return showSlide(slide);	
+			}
+			if(event.key === "c")
+			{
+				console.clear();
+			}
+		});
+	}
+	
+	var slide = 0;
+	var sections;
+	document.addEventListener("DOMContentLoaded", contentLoaded);
+	
+	/** Show the n-th slide */
+	function showSlide(slide)
+	{
+		if(slide > 0)
+			sections[slide-1].className = "";
+		sections[slide].className = "active";
+		if(slide < sections.length - 1)
+			sections[slide+1].className = "";
+	}
+	
+	function triggerDebugger()
+	{
+		// Note: Spend a second looking at the debugger view.
+		// Note: Don't check in code with this keyword, it'll be annoying to other developers trying to debug the code later.
+		// Note: Step into console.log to see minified code, bigger callstacks
+		console.log("Let's do some work, then take a break.");
+		debugger;
+		console.log("Back to work!");
+	}
+	
+	function triggerBreakpoint()
+	{
+		var time = performance.now();
+		console.log("Can you slow this down?");
+		if(didPause(time))
+			console.log("That works!");
+		else
+			console.log("Nope, try again.");
+	}
+	
+	// Note: Breaking on exceptions doesn't apply to code run from the console
+	function exception()
+	{
+		var arr = ["a", "b", "c"];
+		
+		try
+		{
+			arr.contains("b");
+		}
+		catch(e) { /* just swallow the exception */ }
+		
+		arr.contains("b");
+	}
+	
+	/**
+	 * Generate a color based on the current time, offset from sin.
+	 * @returns {string} 0-255 as a string value
+	 */
+	function color(modifier)
+	{
+		if(modifier === undefined) modifier = 0;
+		return Math.max(Math.sin((performance.now() / 100) + modifier) * 255, 0).toFixed(0)
+	}
+	
+	function requestAnimationFrameCallback()
+	{
+/*
+Try each of these lines as values for a conditional breakpoint:
+	colors[2] === "255"
+	colors = [0, 0, 255], false
+	colors[0] = document.querySelector('#red').value, colors[1] = document.querySelector('#blue').value, colors[2] = document.querySelector('#green').value, false
+*/
+		var colors = [];
+		colors[0] = color(-Math.PI / 3);
+		colors[1] = color(0);
+		colors[2] = color(Math.PI / 3);
+		
+		document.querySelector("#target1").style.backgroundColor = "rgb(" + colors.join(',') + ")";
+		document.querySelector("#target2").style.backgroundColor = "rgb(" + colors.join(',') + ")";
+		var shouldContinue = true;
+		if(shouldContinue)
+			requestAnimationFrame(requestAnimationFrameCallback);
+	}
+	
+	function xhr()
+	{
+		function xhrCallback()
+		{
+			var response = this.responseText;
+			var span = document.querySelector("#xhrResult");
+			span.innerText = response;
+			if(response.indexOf("Success") === 0)
+			{
+				span.style.color = "green";
+			}
+			else if(response.indexOf("Fail") === 0)
+			{
+				span.style.color = "red";
+			}
+			
+			// Note: Enable async callstacks
+			setTimeout(xhrReset, 5000);
+		}
+		
+		function xhrReset()
+		{
+			var span = document.querySelector("#xhrResult");
+			span.innerText = "Run again...";
+			span.style.color = "black";
+		}
+
+		var x = new XMLHttpRequest();
+		x.addEventListener("load", xhrCallback);
+		x.open("GET", "https://raw.githubusercontent.com/AdamTReineke/StepIntoDebugging/master/xhr-target");
+		x.send();
+	}
+</script>
+
+</head>
+<body>
+<cite>A Step Into Debugging by Adam Reineke (@AdamTReineke). Presented at BellevueJS on 6/28/16.</cite>
+
+<article>
+	<section>
+		<h1>Beyond <span class="code">console.log</span>: A <pun>Step Into</pun> Debugging</h1>
+		<h2>About Me</h2>
+		<ul>
+			<li>Adam Reineke</li>
+			<li><a href="https://www.linkedin.com/in/adamtreineke">Work</a> on Sway at Microsoft (free, <a href="https://sway.com">Sway.com</a>)</li>
+			<li>Took my first web development job about 10 years ago</li>
+			<li><a href="https://twitter.com/AdamTReineke">@AdamTReineke</a></li>
+			<li>The source for this talk <a href="https://github.com/AdamTReineke/StepIntoDebugging">is on Github</a></li>
+		</ul>
+	</section>
+	<section>
+		<h2>Getting Started</h2>
+		<ul>
+			<li class="code">alert({a: 'b'}); <button onclick="alert({a: 'b'});" >Go</button></li>
+			<li class="code">console.log({a: 'b'}); <button onclick="console.log({a: 'b'})" >Go</button></li>
+		</ul>
+	</section>
+	<section>
+		<h2>How To Stop Code</h2>
+		<ul>
+			<li class="code">debugger; <button onclick="triggerDebugger();">Go</button></li>
+			<li>Breakpoints <button onclick="triggerBreakpoint();">Go</button></li>
+			<li>XHR breakpoints <button onclick="xhr();">Go</button> <span id="xhrResult">Not yet run</span></li>
+			<li>DOM breakpoints</li>
+			<li>Event Listener breakpoints</li>
+			<li>Exceptions <button onclick="exception();">Go</button></li>
+			<li>Just hit pause <button onclick="requestAnimationFrameCallback();">Go</button></li>
+		</ul>
+		<div id="target1" style="width:50px; height: 50px; border:1px solid black;"></div>
+	</section>
+	<section>
+		<h2>Conditional Breakpoints</h2>
+		<div id="target2" style="width:50px; height: 50px; border:1px solid black;"></div>
+		<ul>
+			<li>
+				<input id="red" type="range" min="0" max="255" />
+				<input id="green" type="range" min="0" max="255" />
+				<input id="blue" type="range" min="0" max="255" />
+			</li>
+		</ul>
+	</section>
+	<section>
+		<h2>Replacing Built-Ins</h2>
+<pre>
+	var nodeStats = {
+		appendChild: 0,
+		attached: 0,
+		detached: 0
+	};
+	var isAttached = function(node) {
+		if (node.parentNode === null) return false;
+		if (node.nodeName === "HTML") return true;
+		return isAttached(node.parentNode);
+	}
+	var _appendChild = Node.prototype.appendChild;
+	Node.prototype.appendChild = function(newChild) {
+		nodeStats.appendChild++;
+		isAttached(this) ? nodeStats.attached++ : nodeStats.detached++;
+		return _appendChild.call(this, newChild);
+	};
+</pre>
+	</section>
+</article>
+
+
+</body>
+</html>
