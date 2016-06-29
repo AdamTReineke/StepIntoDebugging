@@ -21,6 +21,7 @@
 	.code { font-family: Consolas, Courier New, Courier, monospace; }
 	h1 .code { font-weight: 100; }
 	button { border-radius:0.4em; border:1px solid black; }
+	h2 { position:absolute; top:0;right:30px; text-align:right; }
 </style>
 
 <script>
@@ -174,6 +175,8 @@ Try each of these lines as values for a conditional breakpoint:
 <article>
 	<section>
 		<h1>Beyond <span class="code">console.log</span>: A <pun>Step Into</pun> Debugging</h1>
+	</section>
+	<section>
 		<h2>About Me</h2>
 		<ul>
 			<li>Adam Reineke</li>
@@ -196,8 +199,8 @@ Try each of these lines as values for a conditional breakpoint:
 			<li class="code">debugger; <button onclick="triggerDebugger();">Go</button></li>
 			<li>Breakpoints <button onclick="triggerBreakpoint();">Go</button></li>
 			<li>XHR breakpoints <button onclick="xhr();">Go</button> <span id="xhrResult">Not yet run</span></li>
-			<li>DOM breakpoints</li>
 			<li>Event Listener breakpoints</li>
+			<li>DOM breakpoints</li>
 			<li>Exceptions <button onclick="exception();">Go</button></li>
 			<li>Just hit pause <button onclick="requestAnimationFrameCallback();">Go</button></li>
 		</ul>
